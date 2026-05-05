@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --background: #141414;
+  --foreground: #f4f4f5;
+  --card: #1c1c1e;
+  --muted: #a1a1aa;
+  --accent: #ea580c;
+  --accent-dim: #c2410c;
+  --border: #27272a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@keyframes listening-ring {
+  from {
+    transform: scale(0.88);
+    opacity: 0.85;
+  }
+  to {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@keyframes sound-bar {
+  0%,
+  100% {
+    transform: scaleY(0.2);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}

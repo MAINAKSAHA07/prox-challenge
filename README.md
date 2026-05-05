@@ -1,92 +1,146 @@
-# Prox Founding Engineer Challenge
+# WeldPilot: Multimodal Agent for the Vulcan OmniPro 220
 
-<img src="product.webp" alt="Vulcan OmniPro 220" width="400" /> <img src="product-inside.webp" alt="Vulcan OmniPro 220 — inside panel" width="400" />
+WeldPilot is a **manual-grounded product support copilot** for the Harbor Freight **Vulcan OmniPro 220** multiprocess welder. It combines **Anthropic tool orchestration** (Messages API + typed tools), **structured JSON “artifact” blocks**, and **local hybrid knowledge** (deterministic facts + PDF text chunks + rasterized manual pages) so answers stay accurate, visual, and demo-ready—not a thin PDF chatbot.
 
-## The Product
+**Original challenge brief:** see [CHALLENGE.md](./CHALLENGE.md).
 
-The [Vulcan OmniPro 220](https://www.harborfreight.com/omnipro-220-industrial-multiprocess-welder-with-120240v-input-57812.html) is a multiprocess welding system sold by Harbor Freight. It supports four welding processes (MIG, Flux-Cored, TIG, and Stick), runs on both 120V and 240V input, and has an LCD-based synergic control system.
+## Demo video / GIF
 
-Its owner's manual is 48 pages of dense technical content. Duty cycle matrices across multiple voltages and amperages, polarity setup procedures that differ per welding process, wire feed mechanisms with specific tensioner calibrations, wiring schematics, troubleshooting matrices, weld diagnosis diagrams, and a full parts list.
+_Add your Loom or YouTube walkthrough here after recording._
 
-This is exactly the kind of product Prox exists for. Nobody knows how to use this machine straight out of the box but has time to read 48 page manual, but a complicated machine needs expert-level support.
+Example:
 
-Additional video: https://www.youtube.com/watch?v=kxGDoGcnhBw
+- **Video:** `https://www.loom.com/share/...` or `https://www.youtube.com/watch?v=...`
 
-## Your Job
+## Features
 
-Build a multimodal reasoning agent for the Vulcan OmniPro 220 using the Claude Agent SDK. The agent must be able to answer deep technical questions about this product accurately, helpfully, and not just in text.
+- **Voice mode (browser)** — **Hands-free**: leave the mic on and say **“WeldPilot”** (or “weld pilot”); the app plays **“How can I help you?”** and listens for your question. **Speak once**: one-shot dictation without wake word. **Read replies** toggles text-to-speech for answers. Uses the Web Speech API (best in Chrome/Edge on HTTPS or `localhost`).
+- **Manual-grounded chat** with clarifying questions when process, voltage, or wire type matters
+- **Polarity diagrams** (SVG-style React layout: +/- sockets, cable roles, disconnected paths)
+- **Duty cycle results** with 10-minute weld/rest bar when an exact manual anchor exists; honest “nearest rating” messaging when it does not
+- **Process selector** (selection-chart-informed heuristics + tradeoffs)
+- **Troubleshooting flowcharts** (expandable steps, safety preamble, manual page refs)
+- **Setup checklists** with local step completion state
+- **Manual image references** (pre-rendered pages under `public/manual-pages/`)
 
-The manuals are in the `files/` directory.
+## Architecture
 
-**There is no limit to how far you can go.** You can integrate voice. You can build a full interactive experience. Sky is the limit. The more ambitious and polished, the better.
+```mermaid
+flowchart LR
+  UI[Next.js UI / Chat + artifact panel]
+  API[POST /api/chat]
+  Agent[runWeldPilotAgent]
+  Claude[Anthropic Messages API]
+  Tools[WeldPilot tools]
+  JSON[src/data/*.ts structured facts]
+  Chunks[manualChunks.json keyword search]
+  Images[manualImages registry + PNGs]
 
-## What We're Testing
+  UI --> API --> Agent --> Claude
+  Claude -->|tool_use| Tools
+  Tools --> JSON
+  Tools --> Chunks
+  Tools --> Images
+  Claude -->|final JSON| Agent --> API --> UI
+```
 
-### 1. Deep Technical Accuracy
+### Knowledge extraction (hybrid)
 
-Your agent needs to answer questions like these correctly:
+1. **Structured TypeScript** for high-risk facts: duty cycles, polarity routes, setup flows, troubleshooting trees, process capabilities (`src/data/`).
+2. **Deterministic tool functions** so the model cannot “guess” anchor duty cycles or swap polarity silently.
+3. **PDF text chunks** (`src/data/manualChunks.json`) from `files/*.pdf` via `npm run extract-manual` — used for `searchManual` (keyword scoring, no embedding dependency).
+4. **Image registry** (`src/data/manualImages.ts`) + **rasterized pages** (`npm run rasterize-manual` → `public/manual-pages/*.png`).
 
-- "What's the duty cycle for MIG welding at 200A on 240V?"
-- "I'm getting porosity in my flux-cored welds. What should I check?"
-- "What polarity setup do I need for TIG welding? Which socket does the ground clamp go in?"
+### Claude Agent SDK
 
-We will test with questions that require cross-referencing multiple manual sections, understanding visual content (diagrams, schematics, charts), and handling ambiguous questions that need clarification from the user.
+- **`@anthropic-ai/claude-agent-sdk`** is installed for challenge alignment. **`npm run agent-smoke`** runs a minimal read-only `query()` against `src/data/dutyCycles.ts` to verify the SDK in your environment.
+- **The web app** uses **`@anthropic-ai/sdk`** (Messages API) with the same **tool-calling agent loop** pattern Anthropic documents for custom agents: lower latency, no Claude Code subprocess per chat turn, and a predictable JSON contract for the UI.
 
-### 2. Multimodal Responses
+### Design decisions
 
-This is the most important part. Your agent must not be text-only.
+- **Deterministic lookup** for duty cycle and polarity: these are safety- and warranty-adjacent; they must match the manual anchors exactly.
+- **Visual blocks** instead of text-only: garage users reason spatially about cable routing; diagrams and manual crops reduce miswiring risk.
+- **Structured troubleshooting**: enforces ordering (“check first”), safety preambles, and consistent manual citations.
+- **Ambiguity**: the model is prompted to set `needsClarification` / `clarifyingQuestion` when gas vs self-shielded flux, voltage, or thickness is missing.
 
-- If someone asks about polarity setup, the agent should draw or show a diagram of which cable goes in which socket, not just describe it.
-- If the answer relates to a specific image in the manual (the wire feed mechanism, the front panel controls, the weld diagnosis examples), the agent should surface that image.
-- If a question is complex enough, the agent should generate interactive content: a duty cycle calculator, a troubleshooting flowchart, a settings configurator that takes process + material + thickness and outputs recommended wire speed and voltage.
-
-When something is too cognitively hard to explain in words, the agent should draw it. Real-time diagrams, interactive schematics, visual walkthroughs generated through code.
-
-For your agent to handle these responses well you need to reverse engineer Claude artifacts. Here are two places where you can start:
-- https://claude.ai/artifacts (see how Claude renders interactive artifacts in chat)
-- https://www.reidbarber.com/blog/reverse-engineering-claude-artifacts
-
-### 3. Tone and Helpfulness
-
-Imagine your user just bought this welder and is standing in their garage trying to set it up. They're not an idiot, but they're not a professional welder either.
-
-### 4. Knowledge Extraction Quality
-
-The manual has a mix of text, tables, labeled diagrams, schematics, and decision matrices. Some critical information exists only in images (the welding process selection chart, the weld diagnosis photos, the wiring schematic). We want to see that your agent understands and presents the visual content, not just the text.
-
-## Tech Requirements
-
-- Use the [Anthropic Claude Agent SDK](https://docs.anthropic.com) as the foundation for your agent.
-- The project must run locally with a single API key provided via `.env`.
-- You are responsible for your own API costs during development.
-
-## How to Present Your Work
-
-**This matters.** Your submission is not just the code — it's how you present it.
-
-- **Build a frontend.** The best way for us to evaluate your agent is if it has a clean, simple UI we can run immediately. This is realistically the only way to properly demo an agent like this.
-- **Hosting is a plus.** If you host it somewhere we can access without cloning, that's a strong signal. Not required, but it removes friction and shows initiative.
-- **Write a clear README.** Explain how your agent works, what design decisions you made, how knowledge is extracted and represented, and how to run it. Your documentation will be evaluated — we want to see how you think and communicate, not just how you code.
-- **Video walkthrough is a huge plus.** Record yourself demoing the agent and explaining your approach. Walk through the hard questions, show how it handles multimodal responses, explain your architecture. This gives us a much richer picture of your work than code alone.
-
-We should be running your agent within 2 minutes of cloning your repo:
+## Run locally
 
 ```bash
 git clone <your-fork>
-cd <your-fork>
-cp .env.example .env   # we plug in our own Anthropic API key
-# your install command (npm install, uv install, etc.)
-# your run command (npm run dev, python app.py, etc.)
+cd prox-challenge
+cp .env.example .env
+# Add ANTHROPIC_API_KEY to .env
+npm install
+npm run dev
 ```
 
-If it takes longer than that to set up, that's a problem.
+Open [http://localhost:3000](http://localhost:3000).
 
-## What to Submit
+### Regenerate knowledge artifacts (optional)
 
-1. Fork this repo.
-2. Build your solution.
-3. Submit your fork URL through the form at [useprox.com/join/challenge](https://useprox.com/join/challenge).
+```bash
+npm run extract-manual      # refresh manualChunks.json from files/*.pdf
+npm run rasterize-manual    # refresh public/manual-pages/*.png (requires PDFs in files/)
+```
 
-## What Happens Next
+### Tests
 
-We review submissions on a rolling basis and respond to every single one within a few days. Good luck.
+```bash
+npm test
+```
+
+## Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `ANTHROPIC_API_KEY` | Yes | From [Anthropic Console](https://console.anthropic.com/) |
+| `ANTHROPIC_MODEL` | No | Defaults to `claude-sonnet-4-6`; use an ID returned by `GET /v1/models` for your key |
+
+## Evaluation-ready demo questions
+
+Use these in a walkthrough; the UI includes matching quick chips.
+
+1. **MIG 200A @ 240V duty cycle** → **25%** duty cycle; **2.5 min** weld / **7.5 min** rest per 10 minutes; duty cycle card + manual source note.
+2. **Flux-cored polarity** → Ground **positive**, wire feed power **negative**; polarity diagram + DCEP vs DCEN note for solid MIG vs self-shielded flux.
+3. **TIG polarity / ground clamp socket** → Ground **positive**, torch **negative**, gas to regulator, optional foot pedal, wire feed disconnected; diagram.
+4. **Porosity in flux-cored** → Clarify gas-shielded vs self-shielded; troubleshooting flow prioritizes cleanliness, polarity, wire, arc, wind—not “check gas” first for self-shielded.
+5. **Wire feed motor runs, wire does not feed** → Troubleshooting flow + **interior controls** manual image (post-process hook).
+6. **1/8" mild steel outdoors, no gas** → Flux-Cored or Stick recommendation with tradeoffs.
+7. **Front panel controls** → Front panel PNG + label card.
+8. **Load wire spool** → Safety warning + setup checklist + quick-start imagery.
+
+## Limitations
+
+- Not a replacement for formal welding safety training, code compliance, or the official manual.
+- Duty cycle **between** published anchors is **not** interpolated to a fake exact percentage; the UI explains nearest manual ratings.
+- Full multimodal PDF understanding is approximated via rasterized pages + chunk search—not pixel-perfect OCR of every diagram.
+
+## Future improvements
+
+- Voice input (Web Speech API) for hands-dirty use
+- Photo upload + vision pass for cable routing checks
+- Hosted demo (Vercel) with env var configuration
+- Tighter manual callouts (cropped hotspots, clickable hotspots)
+- Deeper settings configurator wired to more manual tables
+
+## Project layout (high level)
+
+```
+src/
+  app/                 # Next.js App Router, chat UI, /api/chat
+  components/          # Artifact renderers (polarity, duty cycle, etc.)
+  data/                # dutyCycles, polarity, troubleshooting, manualChunks.json, …
+  lib/agent/           # Tool definitions, executor, Anthropic loop
+  lib/knowledge/       # Manual keyword search
+  types/               # WeldPilot JSON contract
+public/
+  manual-pages/        # Rasterized manual PNGs
+  files/               # PDFs (copy for static download)
+  *.webp               # Product photos
+files/                 # Source PDFs (challenge inputs)
+scripts/               # PDF chunk + rasterize + Agent SDK smoke test
+```
+
+## License / attribution
+
+Product documentation PDFs and imagery are used here for the Prox challenge submission. WeldPilot is an independent demo and is not affiliated with Harbor Freight or Vulcan.
