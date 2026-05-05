@@ -18,7 +18,7 @@ Example:
 
 ## Features
 
-- **Voice mode (browser)** — **Hands-free**: leave the mic on and say **“Hey Weld”** to wake; the app plays **“How can I help you?”** and listens for your question, then returns to standby until you say **Hey Weld** again. **Speak once**: one-shot dictation. **Read replies** toggles text-to-speech for answers. Uses the Web Speech API (best in Chrome/Edge on HTTPS or `localhost`).
+- **Voice mode (browser)** — **Hands-free**: leave the mic on and say **“Hey Pilot”** to wake; the app plays **“How can I help you?”** and listens for your question, then returns to standby until you say **Hey Pilot** again. **Speak once**: one-shot dictation. **Read replies** toggles text-to-speech for answers. Uses the Web Speech API (best in Chrome/Edge on HTTPS or `localhost`).
 - **Manual-grounded chat** with clarifying questions when process, voltage, or wire type matters
 - **Polarity diagrams** (SVG-style React layout: +/- sockets, cable roles, disconnected paths)
 - **Duty cycle results** with 10-minute weld/rest bar when an exact manual anchor exists; honest “nearest rating” messaging when it does not

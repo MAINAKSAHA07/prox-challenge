@@ -98,7 +98,7 @@ export function useVoiceAgent({
 
     const transcriptRef = { aggregatedFinal: "", combined: "" };
     let lastProcessed = "";
-    /** Previous finalized phrase — merge with next if wake spans two finals ("weld" | "pilot"). */
+    /** Previous finalized phrase — merge with next if wake spans two finals ("hey" | "pilot"). */
     let prevFinalPhrase = "";
     let interimWakeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -216,7 +216,7 @@ export function useVoiceAgent({
         prevFinalPhrase = phrase;
       }
 
-      /** Interim: user often says "WeldPilot" but final fires late — debounce on live text. */
+      /** Interim: wake phrase final can lag — debounce on live interim text. */
       const lastIdx = ev.results.length - 1;
       if (lastIdx >= 0 && phaseRef.current === "listening_wake") {
         const last = ev.results[lastIdx];

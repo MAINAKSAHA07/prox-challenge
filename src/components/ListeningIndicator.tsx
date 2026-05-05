@@ -11,7 +11,7 @@ export function ListeningIndicator({
   className,
 }: {
   mode: ListeningMode;
-  /** e.g. "Hey Weld" — shown in standby copy */
+  /** e.g. "Hey Pilot" — shown in standby copy */
   wakeLabel: string;
   className?: string;
 }) {
