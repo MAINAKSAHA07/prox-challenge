@@ -4,6 +4,10 @@ WeldPilot is a **manual-grounded product support copilot** for the Harbor Freigh
 
 **Original challenge brief:** see [CHALLENGE.md](./CHALLENGE.md).
 
+## Live demo
+
+**Deployed on Vercel:** [https://prox-challenge-chi.vercel.app/](https://prox-challenge-chi.vercel.app/)
+
 ## Demo video / GIF
 
 _Add your Loom or YouTube walkthrough here after recording._
@@ -14,7 +18,7 @@ Example:
 
 ## Features
 
-- **Voice mode (browser)** — **Hands-free**: leave the mic on and say **“WeldPilot”** (or “weld pilot”); the app plays **“How can I help you?”** and listens for your question. **Speak once**: one-shot dictation without wake word. **Read replies** toggles text-to-speech for answers. Uses the Web Speech API (best in Chrome/Edge on HTTPS or `localhost`).
+- **Voice mode (browser)** — **Hands-free**: leave the mic on and say **“Hey Weld”** to wake; the app plays **“How can I help you?”** and listens for your question, then returns to standby until you say **Hey Weld** again. **Speak once**: one-shot dictation. **Read replies** toggles text-to-speech for answers. Uses the Web Speech API (best in Chrome/Edge on HTTPS or `localhost`).
 - **Manual-grounded chat** with clarifying questions when process, voltage, or wire type matters
 - **Polarity diagrams** (SVG-style React layout: +/- sockets, cable roles, disconnected paths)
 - **Duty cycle results** with 10-minute weld/rest bar when an exact manual anchor exists; honest “nearest rating” messaging when it does not
@@ -119,7 +123,7 @@ Use these in a walkthrough; the UI includes matching quick chips.
 
 - Voice input (Web Speech API) for hands-dirty use
 - Photo upload + vision pass for cable routing checks
-- Hosted demo (Vercel) with env var configuration
+- Expand hosted demo notes (env vars on Vercel, usage limits)
 - Tighter manual callouts (cropped hotspots, clickable hotspots)
 - Deeper settings configurator wired to more manual tables
 
