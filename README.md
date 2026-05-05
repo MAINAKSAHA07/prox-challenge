@@ -1,6 +1,6 @@
 # WeldPilot: Multimodal Agent for the Vulcan OmniPro 220
 
-WeldPilot is a **manual-grounded product support copilot** for the Harbor Freight **Vulcan OmniPro 220** multiprocess welder. It combines **Anthropic tool orchestration** (Messages API + typed tools), **structured JSON “artifact” blocks**, and **local hybrid knowledge** (deterministic facts + PDF text chunks + rasterized manual pages) so answers stay accurate, visual, and demo-ready—not a thin PDF chatbot.
+This repo is my submission for the Prox challenge: a **manual-grounded product support copilot** for the Harbor Freight **Vulcan OmniPro 220** multiprocess welder. The emphasis is on **reliable grounding**—Anthropic tool orchestration (Messages API + typed tools), **structured JSON “artifact” blocks**, and **local hybrid knowledge** (deterministic facts + PDF text chunks + rasterized manual pages)—so the demo behaves like field-grade support, not a thin PDF chatbot.
 
 **Original challenge brief:** see [CHALLENGE.md](./CHALLENGE.md).
 
@@ -119,9 +119,16 @@ Use these in a walkthrough; the UI includes matching quick chips.
 - Duty cycle **between** published anchors is **not** interpolated to a fake exact percentage; the UI explains nearest manual ratings.
 - Full multimodal PDF understanding is approximated via rasterized pages + chunk search—not pixel-perfect OCR of every diagram.
 
+## Future scope: affect-aware assistance with Amazon Comprehend
+
+Where I’d like to take this next—beyond the grounded tool loop—is **emotionally intelligent routing** in a narrow, operational sense: noticing when a user sounds frustrated, rushed, or overwhelmed *before* they fully spell out a symptom, and adapting **tone, pacing, and how aggressively we surface safety guardrails**, without weakening deterministic lookups (duty cycle, polarity, etc.).
+
+**Amazon Comprehend** is a sensible hook for that layer: run **sentiment / syntax-style signals on transcript text** (from the existing browser speech pipeline or typed input), attach compact labels to each turn, and apply a small policy before the agent loop—e.g., calmer clarification prompts, shorter spoken replies when stress is high, or extra emphasis when language looks ambiguously “panic-adjacent” around hot equipment.
+
+**Scope honesty:** that pipeline is **not implemented here**; this section is forward-looking. What *is* relevant is feasibility on my side: I already have **hands-on experience with Amazon Comprehend**, and I have **built and developed projects using it** as part of my **graduate research at Arizona State University (ASU)**. Wiring Comprehend-style NLP signals into a grounded industrial assistant is the kind of applied, safety-adjacent HCI problem I’m motivated to keep pursuing.
+
 ## Future improvements
 
-- Voice input (Web Speech API) for hands-dirty use
 - Photo upload + vision pass for cable routing checks
 - Expand hosted demo notes (env vars on Vercel, usage limits)
 - Tighter manual callouts (cropped hotspots, clickable hotspots)
